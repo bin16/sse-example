@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    .app {
+      display: grid;
+      grid-template-rows: 2rem 640px 3rem;
+      gap: 1rem;
+      margin: 2rem;
+      padding: 1rem;
+    }
+    .app,
+    .app-header,
+    .app-content,
+    .app-footer {
+      border: 1px solid #dddddd;
+    }
+    .app-content {
+      overflow-y: auto;
+    }
+    .app-footer {
+      display: grid;
+      grid-template-columns: 1fr 75px;
+      gap: 1rem;
+    }
+    .message-wrapper {
+      padding: .5rem;
+      display: flex;
+    }
+    .message {
+      padding: 1rem;
+    }
+    .message {
+      border: 1px solid #cccccc;
+      background-color: #eeeeee;
+      min-width: 120px;
+      border-radius: 5px;
+    }
+    .message-wrapper.message-self {
+      justify-content: flex-end;
+    }
+    .message-wrapper.message-self .message {
+      border: 1px solid lightskyblue;
+      background-color: lightblue;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header"></header>
+    <main class="app-content" id="message-list">
+    </main>
+    <footer class="app-footer">
+      <input id="message-text" />
+      <button id="send-message">Send</button>
+    </footer>
+  </div>
+  <script>
+    const chatId = document.location.pathname.match(/\/chat\/([\w_-]+)\/?/)[1];
+    const eventSource = new EventSource(`/chat/${chatId}/messages`);
+    eventSource.addEventListener('message', function(e) {
+      console.log('message:', e.data);
+      document.querySelector('#message-list').appendChild(messageElement(e.data));
+    });
+    document.querySelector('#send-message').addEventListener('click', function() {
+      const target = document.location.hash ? document.location.hash.slice(1) : '';
+      if (!target) {
+        return;
+      }
+      const textarea = document.querySelector('#message-text');
+      const text = textarea.value;
+      const url = `/chat/${target}/messages/${text}`;
+      fetch(url, { method: 'POST', });
+      document.querySelector('#message-list').appendChild(messageElement(text, self));
+    });
+
+    function messageHTML(text, self = false) {
+
+      const p = new DOMParser();
+      const d = p.parseFromString(`<div class="message-wrapper ${self && 'message-self'}">
+        <div class="message">
+          <div class="message__text">${text}</div>
+        </div>
+      </div>`, 'text/html')
+      return d;
+    }
+    function messageElement(text, self = false) {
+      const msgWrapper = document.createElement('div');
+      msgWrapper.classList.add('message-wrapper');
+      if (self) {
+        msgWrapper.classList.add('message-self');
+      }
+
+      const msg = document.createElement('div');
+      msg.classList.add('message');
+
+      const msgText = document.createElement('div');
+      msgText.innerText = text;
+      msgText.classList.add('message__text');
+
+      msgWrapper.appendChild(msg);
+      msg.appendChild(msgText);
+
+      return msgWrapper;
+    }
+  </script>
+</body>
+</html>
