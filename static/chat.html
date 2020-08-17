@@ -73,20 +73,16 @@
       const textarea = document.querySelector('#message-text');
       const text = textarea.value;
       const url = `/chat/${target}/messages/${text}`;
-      fetch(url, { method: 'POST', });
-      document.querySelector('#message-list').appendChild(messageElement(text, self));
+      fetch(url, { method: 'POST', })
+        .then(resp => {
+          if (resp.status === 200) {
+            textarea.value = '';
+            document.querySelector('#message-list').appendChild(messageElement(text, self));
+          } else {
+            document.querySelector('#message-list').appendChild(messageElement('Failed to send message: ' + text, self));
+          }
+        });
     });
-
-    function messageHTML(text, self = false) {
-
-      const p = new DOMParser();
-      const d = p.parseFromString(`<div class="message-wrapper ${self && 'message-self'}">
-        <div class="message">
-          <div class="message__text">${text}</div>
-        </div>
-      </div>`, 'text/html')
-      return d;
-    }
     function messageElement(text, self = false) {
       const msgWrapper = document.createElement('div');
       msgWrapper.classList.add('message-wrapper');
